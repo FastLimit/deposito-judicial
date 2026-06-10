@@ -125,3 +125,34 @@ Stage Summary:
 - Role-based access control works as specified
 - CRUD operations work correctly
 - No errors or broken functionality found
+
+---
+Task ID: 12
+Agent: Main Agent
+Task: Apply user-requested changes: Operator can only CREATE (not edit), add Observaciones field, update Ubicación label
+
+Work Log:
+- Added `observaciones` field (String, default "") to Vehicle model in prisma/schema.prisma
+- Ran `bun run db:push` to sync schema changes
+- Updated vehicles API POST route to accept and store observaciones
+- Updated vehicles API PUT route: changed from blocking only CONSULTATION to ADMIN-only (operator can no longer edit)
+- Updated vehicles API PUT route to accept and update observaciones
+- Frontend changes in page.tsx:
+  - Added `observaciones` to VehicleData and VehicleFormData interfaces
+  - Added `observaciones: ""` to emptyVehicleForm
+  - Changed `canEdit` from `ADMIN || OPERATOR` to `ADMIN` only
+  - Added `canCreate = ADMIN || OPERATOR` for the Nuevo Vehículo button
+  - Updated "Nuevo Vehículo" button condition from `canEdit` to `canCreate`
+  - Added "Observaciones" column to the vehicles table (hidden on small screens)
+  - Updated "Ubicación" table header to "Ubicación (Mza. y Lote)"
+  - Updated "Ubicación" form label to "Ubicación (Mza. y Lote)" and placeholder to "Ej: Mza. 5, Lote 12"
+  - Added Observaciones textarea to vehicle create/edit dialog
+  - Updated colSpan values from 8 to 9 for loading/empty table states
+  - Updated dashboard role description for Operator: "Puede cargar vehículos" (removed "y editar")
+  - Widened dialog from sm:max-w-lg to sm:max-w-xl with max-h-[90vh] overflow-y-auto
+
+Stage Summary:
+- Operator role now only CREATE vehicles, NOT edit (editing is ADMIN-only)
+- "Observaciones" textarea field added to vehicle form and table
+- "Ubicación" field now labeled as "Mza. y Lote" with appropriate placeholder
+- All changes verified via Agent Browser: operator sees "Nuevo Vehículo" but no Edit/Delete buttons

@@ -90,6 +90,7 @@ interface VehicleData {
   ujInterviene: string;
   ubicacion: string;
   estadoConservacion: string;
+  observaciones: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,6 +102,7 @@ interface VehicleFormData {
   ujInterviene: string;
   ubicacion: string;
   estadoConservacion: string;
+  observaciones: string;
 }
 
 interface UserFormData {
@@ -133,6 +135,7 @@ const emptyVehicleForm: VehicleFormData = {
   ujInterviene: "",
   ubicacion: "",
   estadoConservacion: "",
+  observaciones: "",
 };
 
 const emptyUserForm: UserFormData = {
@@ -339,7 +342,7 @@ function DashboardView({ userRole }: { userRole: string }) {
           <CardContent>
             <p className="text-sm text-muted-foreground">
               {userRole === "ADMIN" && "Acceso total al sistema"}
-              {userRole === "OPERATOR" && "Puede cargar y editar vehículos"}
+              {userRole === "OPERATOR" && "Puede cargar vehículos"}
               {userRole === "CONSULTATION" && "Solo lectura"}
             </p>
           </CardContent>
@@ -396,7 +399,8 @@ function VehiclesView({ userRole }: { userRole: string }) {
   const [deleteVehicleId, setDeleteVehicleId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const canEdit = userRole === "ADMIN" || userRole === "OPERATOR";
+  const canCreate = userRole === "ADMIN" || userRole === "OPERATOR";
+  const canEdit = userRole === "ADMIN";
   const canDelete = userRole === "ADMIN";
 
   const fetchVehicles = useCallback(async () => {
@@ -454,6 +458,7 @@ function VehiclesView({ userRole }: { userRole: string }) {
       ujInterviene: vehicle.ujInterviene,
       ubicacion: vehicle.ubicacion,
       estadoConservacion: vehicle.estadoConservacion,
+      observaciones: vehicle.observaciones || "",
     });
     setShowVehicleDialog(true);
   };
@@ -539,7 +544,7 @@ function VehiclesView({ userRole }: { userRole: string }) {
             {total} vehículo{total !== 1 ? "s" : ""} registrado{total !== 1 ? "s" : ""}
           </p>
         </div>
-        {canEdit && (
+        {canCreate && (
           <Button onClick={handleNewVehicle} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Vehículo
@@ -612,25 +617,26 @@ function VehiclesView({ userRole }: { userRole: string }) {
                     <div className="flex items-center gap-1">UJ Interviene <SortIcon column="ujInterviene" /></div>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none hidden lg:table-cell" onClick={() => handleSort("ubicacion")}>
-                    <div className="flex items-center gap-1">Ubicación <SortIcon column="ubicacion" /></div>
+                    <div className="flex items-center gap-1">Ubicación (Mza. y Lote) <SortIcon column="ubicacion" /></div>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => handleSort("estadoConservacion")}>
                     <div className="flex items-center gap-1">Estado <SortIcon column="estadoConservacion" /></div>
                   </TableHead>
+                  <TableHead className="hidden xl:table-cell">Observaciones</TableHead>
                   {(canEdit || canDelete) && <TableHead className="text-right">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={9} className="text-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                       <p className="text-muted-foreground mt-2">Cargando vehículos...</p>
                     </TableCell>
                   </TableRow>
                 ) : vehicles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={9} className="text-center py-12">
                       <Car className="h-12 w-12 mx-auto text-muted-foreground/40" />
                       <p className="text-muted-foreground mt-2">No se encontraron vehículos</p>
                     </TableCell>
@@ -648,6 +654,9 @@ function VehiclesView({ userRole }: { userRole: string }) {
                         <Badge variant="outline" className={`text-xs ${ESTADO_COLORS[vehicle.estadoConservacion] || ""}`}>
                           {vehicle.estadoConservacion}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell max-w-[200px] truncate text-muted-foreground text-sm">
+                        {vehicle.observaciones || "—"}
                       </TableCell>
                       {(canEdit || canDelete) && (
                         <TableCell className="text-right">
@@ -714,7 +723,7 @@ function VehiclesView({ userRole }: { userRole: string }) {
 
       {/* Vehicle Create/Edit Dialog */}
       <Dialog open={showVehicleDialog} onOpenChange={setShowVehicleDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingVehicle ? "Editar Vehículo" : "Nuevo Vehículo"}
@@ -762,11 +771,11 @@ function VehiclesView({ userRole }: { userRole: string }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Ubicación *</Label>
+              <Label>Ubicación (Mza. y Lote) *</Label>
               <Input
                 value={vehicleForm.ubicacion}
                 onChange={(e) => setVehicleForm({ ...vehicleForm, ubicacion: e.target.value })}
-                placeholder="Ej: Playa A - Fila 3"
+                placeholder="Ej: Mza. 5, Lote 12"
               />
             </div>
             <div className="space-y-2">
@@ -784,6 +793,16 @@ function VehiclesView({ userRole }: { userRole: string }) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Observaciones</Label>
+              <textarea
+                value={vehicleForm.observaciones}
+                onChange={(e) => setVehicleForm({ ...vehicleForm, observaciones: e.target.value })}
+                placeholder="Observaciones adicionales sobre el vehículo..."
+                rows={3}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              />
             </div>
           </div>
           <DialogFooter>

@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { marca, modelo, dominio, ujInterviene, ubicacion, estadoConservacion } = body;
+    const { marca, modelo, dominio, ujInterviene, ubicacion, estadoConservacion, observaciones } = body;
 
     if (!marca || !modelo || !dominio || !ujInterviene || !ubicacion || !estadoConservacion) {
       return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 });
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         ujInterviene,
         ubicacion,
         estadoConservacion,
+        observaciones: observaciones || "",
       },
     });
 

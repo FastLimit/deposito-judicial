@@ -37,14 +37,14 @@ export async function PUT(
   }
 
   const userRole = (session.user as { role: string }).role;
-  if (userRole === "CONSULTATION") {
+  if (userRole !== "ADMIN") {
     return NextResponse.json({ error: "No tiene permisos para editar vehículos" }, { status: 403 });
   }
 
   try {
     const { id } = await params;
     const body = await request.json();
-    const { marca, modelo, dominio, ujInterviene, ubicacion, estadoConservacion } = body;
+    const { marca, modelo, dominio, ujInterviene, ubicacion, estadoConservacion, observaciones } = body;
 
     const existing = await db.vehicle.findUnique({ where: { id: parseInt(id) } });
     if (!existing) {
@@ -65,6 +65,7 @@ export async function PUT(
         ...(ujInterviene && { ujInterviene }),
         ...(ubicacion && { ubicacion }),
         ...(estadoConservacion && { estadoConservacion }),
+        ...(observaciones !== undefined && { observaciones }),
       },
     });
 
