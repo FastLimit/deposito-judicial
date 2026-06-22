@@ -1,0 +1,17 @@
+[build]
+  command = "npx prisma generate && npx prisma db push --accept-data-loss --skip-generate && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+  NETLIFY_NEXT_PLUGIN_SKIP = "false"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Funciones con más tiempo (Prisma + bcrypt)
+[functions]
+  node_bundler = "esbuild"
+  [functions."api/*"]
+    timeout = 26
